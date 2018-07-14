@@ -1,8 +1,16 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react";
+import logo from "./logo.svg";
+import "./App.css";
 
-import { Editor, EditorState } from 'draft-js';
+import { Editor, EditorState } from "draft-js";
+
+const editorStyles = {
+  width: "75%",
+  margin: "40px auto",
+  padding: "20px",
+  border: "solid 1px gray",
+  "min-height": "600px"
+};
 
 class App extends Component {
   constructor(props) {
@@ -20,11 +28,13 @@ class App extends Component {
         <p className="App-intro">
           To get started, edit <code>src/App.js</code> and save to reload.
         </p>
-        <Editor
-          editorState={this.state.editorState}
-          placeholder="Tell a story..."
-          onChange={this.onChange}
-        />
+        <div style={editorStyles}>
+          <Editor
+            editorState={this.state.editorState}
+            placeholder="Tell a story..."
+            onChange={this.onChange}
+          />
+        </div>
       </div>
     );
   }
