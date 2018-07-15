@@ -1,23 +1,24 @@
-import React, { Component } from "react";
+// @flow
+import * as React from "react";
 import logo from "./logo.svg";
 import "./App.css";
 
 import { Editor, EditorState } from "draft-js";
 
-const editorStyles = {
-  width: "75%",
-  margin: "40px auto",
-  padding: "20px",
-  border: "solid 1px gray",
-  "min-height": "600px"
+type Props = {};
+type State = {
+  editorState: EditorState
 };
-
-class App extends Component {
-  constructor(props) {
+class App extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { editorState: EditorState.createEmpty() };
-    this.onChange = editorState => this.setState({ editorState });
   }
+
+  onChange(editorState: EditorState): void {
+    this.setState({ editorState });
+  }
+
   render() {
     return (
       <div className="App">
@@ -28,7 +29,7 @@ class App extends Component {
         <p className="App-intro">
           To get started, edit <code>src/App.js</code> and save to reload.
         </p>
-        <div style={editorStyles}>
+        <div className="App-editor">
           <Editor
             editorState={this.state.editorState}
             placeholder="Tell a story..."
