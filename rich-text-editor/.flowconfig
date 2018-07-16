@@ -1,5 +1,6 @@
 [ignore]
 .*\/node_modules\/draft-js\/lib\/.*.js.flow.*
+.*\/node_modules\/eslint-plugin-jsx-a11y
 
 [include]
 
