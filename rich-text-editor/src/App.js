@@ -25,14 +25,23 @@ class App extends React.Component<Props, State> {
     this.setState({ editorState });
   };
 
+  onTab = e => {
+    const maxDepth = 4;
+    const newEditorState = RichUtils.onTab(e, this.state.editorState, maxDepth);
+
+    if (newEditorState !== this.state.editorState) {
+      this.onChange(newEditorState);
+    }
+  };
+
   focus: () => void;
 
   focus = () => this.editorComponentRef.editor.focus();
 
   mapKeyToEditorCommand = e => {
+    // TODO This function never runs for the tab key
     const isTabKey = e.keyCode === 9;
     const maxDepth = 4;
-    console.log(isTabKey);
 
     if (isTabKey) {
       const newEditorState = RichUtils.onTab(
@@ -40,7 +49,6 @@ class App extends React.Component<Props, State> {
         this.state.editorState,
         maxDepth
       );
-      console.log(newEditorState !== this.state.editorState);
 
       if (newEditorState !== this.state.editorState) {
         this.onChange(newEditorState);
@@ -60,7 +68,6 @@ class App extends React.Component<Props, State> {
   toggleInlineStyle: (inlineStyle: string) => void;
 
   toggleInlineStyle = (inlineStyle: string) => {
-    // const currentStyle = this.state.editorState.getCurrentInlineStyle();
     this.onChange(
       RichUtils.toggleInlineStyle(this.state.editorState, inlineStyle)
     );
@@ -103,11 +110,13 @@ class App extends React.Component<Props, State> {
           }}
           role="textbox"
           aria-multiline
+          tabIndex={0}
         >
           <Editor
             editorState={editorState}
             placeholder="Tell a story..."
             onChange={this.onChange}
+            onTab={this.onTab}
             handleKeyCommand={this.handleKeyCommand}
             keyBindingFn={this.mapKeyToEditorCommand}
             spellCheck
