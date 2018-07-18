@@ -1,0 +1,8 @@
+.style-button {
+  border: none;
+  background: none;
+}
+
+.active {
+  color: red;
+}
