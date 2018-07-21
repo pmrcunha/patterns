@@ -1,20 +1,83 @@
 // @flow
 import * as React from "react";
-import { Editor, EditorState, RichUtils, getDefaultKeyBinding } from "draft-js";
+import {
+  Editor,
+  EditorState,
+  RichUtils,
+  getDefaultKeyBinding,
+  AtomicBlockUtils
+} from "draft-js";
 import "draft-js/dist/Draft.css";
 import logo from "./logo.svg";
 import "./App.css";
 
 import BlockStyleControls from "./components/BlockStyleControls";
 import InlineStyleControls from "./components/InlineStyleControls";
+import MediaControls from "./components/MediaControls";
+import MediaComponent from "./components/MediaComponent";
+
+function mediaBlockRenderer(contentBlock) {
+  const type = contentBlock.getType();
+  if (type === "atomic") {
+    return {
+      component: MediaComponent,
+      editable: false
+    };
+  }
+  return undefined;
+}
+
+const styles = {
+  root: {
+    fontFamily: "'Georgia', serif",
+    padding: 20,
+    width: 600
+  },
+  buttons: {
+    marginBottom: 10
+  },
+  urlInputContainer: {
+    marginBottom: 10
+  },
+  urlInput: {
+    fontFamily: "'Georgia', serif",
+    marginRight: 10,
+    padding: 3
+  },
+  editor: {
+    border: "1px solid #ccc",
+    cursor: "text",
+    minHeight: 80,
+    padding: 10
+  },
+  button: {
+    marginTop: 10,
+    textAlign: "center"
+  },
+  media: {
+    width: "100%",
+    // Fix an issue with Firefox rendering video controls
+    // with 'pre-wrap' white-space
+    whiteSpace: "initial"
+  }
+};
 
 type Props = {};
 type State = {
-  editorState: EditorState
+  editorState: EditorState,
+  showURLInput: boolean,
+  url: string,
+  urlType: string
 };
 
 class App extends React.Component<Props, State> {
-  state = { editorState: EditorState.createEmpty() };
+  state = {
+    editorState: EditorState.createEmpty(),
+    showURLInput: false,
+    urlValue: "",
+    altValue: "",
+    urlType: ""
+  };
 
   onChange: (editorState: EditorState) => void;
 
@@ -31,6 +94,26 @@ class App extends React.Component<Props, State> {
     if (newEditorState !== this.state.editorState) {
       this.onChange(newEditorState);
     }
+  };
+
+  onURLChange = e => this.setState({ urlValue: e.target.value });
+
+  onAltChange = e => this.setState({ altValue: e.target.value });
+
+  onURLInputKeyDown = e => {
+    if (e.which === 13) {
+      this.confirmMedia(e);
+    }
+  };
+
+  onAltInputKeyDown = e => {
+    if (e.which === 13) {
+      this.altInputComponentRef.focus();
+    }
+  };
+
+  addImage = () => {
+    this.promptForMedia("image");
   };
 
   editorComponentRef: React$ElementRef<Editor>;
@@ -60,6 +143,50 @@ class App extends React.Component<Props, State> {
     }
   };
 
+  confirmMedia = e => {
+    e.preventDefault();
+    const { editorState, urlValue, urlType, altValue } = this.state;
+    const contentState = editorState.getCurrentContent();
+    const contentStateWithEntity = contentState.createEntity(
+      urlType,
+      "IMMUTABLE",
+      { src: urlValue, alt: altValue }
+    );
+    const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+    const newEditorState = EditorState.set(editorState, {
+      currentContent: contentStateWithEntity
+    });
+    this.setState(
+      {
+        editorState: AtomicBlockUtils.insertAtomicBlock(
+          newEditorState,
+          entityKey,
+          " "
+        ),
+        showURLInput: false,
+        urlValue: "",
+        altValue: ""
+      },
+      () => {
+        setTimeout(() => this.focus(), 0);
+      }
+    );
+  };
+
+  promptForMedia = type => {
+    this.setState(
+      {
+        showURLInput: true,
+        urlValue: "",
+        altValue: "",
+        urlType: type
+      },
+      () => {
+        setTimeout(() => this.urlInputComponentRef.focus(), 0);
+      }
+    );
+  };
+
   toggleBlockType: (blockType: string) => void;
 
   toggleBlockType = (blockType: string) => {
@@ -76,17 +203,52 @@ class App extends React.Component<Props, State> {
 
   handleKeyCommand: (command: string, editorState: EditorState) => string;
 
-  handleKeyCommand(command: string, editorState: EditorState) {
+  handleKeyCommand = (command: string, editorState: EditorState) => {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
       this.onChange(newState);
       return "handled";
     }
     return "not-handled";
-  }
+  };
 
   render() {
     const { editorState } = this.state;
+
+    let urlInput;
+    if (this.state.showURLInput) {
+      urlInput = (
+        <div style={styles.urlInputContainer}>
+          <label htmlFor="url-input">URL</label>
+          <input
+            name="url-input"
+            onChange={this.onURLChange}
+            ref={c => {
+              this.urlInputComponentRef = c;
+            }}
+            style={styles.urlInput}
+            type="text"
+            value={this.state.urlValue}
+            onKeyDown={e => {
+              this.onAltInputKeyDown(e);
+            }}
+          />
+          <label htmlFor="alt-input">Alt</label>
+          <input
+            name="alt-input"
+            onChange={this.onAltChange}
+            type="text"
+            ref={c => {
+              this.altInputComponentRef = c;
+            }}
+            value={this.state.altValue}
+            onKeyDown={e => this.onURLInputKeyDown(e)}
+          />
+          <button onMouseDown={this.confirmMedia}>Confirm</button>
+        </div>
+      );
+    }
+
     return (
       <div className="App">
         <header className="App-header">
@@ -101,6 +263,8 @@ class App extends React.Component<Props, State> {
           onToggle={this.toggleInlineStyle}
           editorState={editorState}
         />
+        <MediaControls addImage={this.addImage} />
+        {urlInput}
         <div
           className="App-editor"
           onClick={this.focus}
@@ -120,6 +284,7 @@ class App extends React.Component<Props, State> {
             onTab={this.onTab}
             handleKeyCommand={this.handleKeyCommand}
             keyBindingFn={this.mapKeyToEditorCommand}
+            blockRendererFn={mediaBlockRenderer}
             spellCheck
             ref={c => {
               this.editorComponentRef = c;
