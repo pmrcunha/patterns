@@ -14,10 +14,7 @@ type State = {
 };
 
 class App extends React.Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { editorState: EditorState.createEmpty() };
-  }
+  state = { editorState: EditorState.createEmpty() };
 
   onChange: (editorState: EditorState) => void;
 
@@ -25,7 +22,9 @@ class App extends React.Component<Props, State> {
     this.setState({ editorState });
   };
 
-  onTab = e => {
+  onTab: (e: SyntheticKeyboardEvent<*>) => void;
+
+  onTab = (e: SyntheticKeyboardEvent<*>) => {
     const maxDepth = 4;
     const newEditorState = RichUtils.onTab(e, this.state.editorState, maxDepth);
 
@@ -34,11 +33,13 @@ class App extends React.Component<Props, State> {
     }
   };
 
+  editorComponentRef: React$ElementRef<Editor>;
+
   focus: () => void;
 
   focus = () => this.editorComponentRef.editor.focus();
 
-  mapKeyToEditorCommand = e => {
+  mapKeyToEditorCommand = (e: SyntheticKeyboardEvent<*>) => {
     // TODO This function never runs for the tab key
     const isTabKey = e.keyCode === 9;
     const maxDepth = 4;
