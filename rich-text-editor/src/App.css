@@ -38,3 +38,13 @@
     transform: rotate(360deg);
   }
 }
+
+.App-urlInputContainer {
+  margin-bottom: 10px;
+}
+
+.App-urlInput {
+  font-family: "'Georgia', serif";
+  margin-right: 10px;
+  padding: 3px;
+}

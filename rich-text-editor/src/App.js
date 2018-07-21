@@ -27,41 +27,6 @@ function mediaBlockRenderer(contentBlock) {
   return undefined;
 }
 
-const styles = {
-  root: {
-    fontFamily: "'Georgia', serif",
-    padding: 20,
-    width: 600
-  },
-  buttons: {
-    marginBottom: 10
-  },
-  urlInputContainer: {
-    marginBottom: 10
-  },
-  urlInput: {
-    fontFamily: "'Georgia', serif",
-    marginRight: 10,
-    padding: 3
-  },
-  editor: {
-    border: "1px solid #ccc",
-    cursor: "text",
-    minHeight: 80,
-    padding: 10
-  },
-  button: {
-    marginTop: 10,
-    textAlign: "center"
-  },
-  media: {
-    width: "100%",
-    // Fix an issue with Firefox rendering video controls
-    // with 'pre-wrap' white-space
-    whiteSpace: "initial"
-  }
-};
-
 type Props = {};
 type State = {
   editorState: EditorState,
@@ -114,6 +79,14 @@ class App extends React.Component<Props, State> {
 
   addImage = () => {
     this.promptForMedia("image");
+  };
+
+  addAudio = () => {
+    this.promptForMedia("audio");
+  };
+
+  addVideo = () => {
+    this.promptForMedia("video");
   };
 
   editorComponentRef: React$ElementRef<Editor>;
@@ -207,9 +180,9 @@ class App extends React.Component<Props, State> {
     const newState = RichUtils.handleKeyCommand(editorState, command);
     if (newState) {
       this.onChange(newState);
-      return "handled";
+      return true;
     }
-    return "not-handled";
+    return false;
   };
 
   render() {
@@ -218,15 +191,15 @@ class App extends React.Component<Props, State> {
     let urlInput;
     if (this.state.showURLInput) {
       urlInput = (
-        <div style={styles.urlInputContainer}>
+        <div className="App-urlInputContainer">
           <label htmlFor="url-input">URL</label>
           <input
-            name="url-input"
+            id="url-input"
+            className="App-urlInput"
             onChange={this.onURLChange}
             ref={c => {
               this.urlInputComponentRef = c;
             }}
-            style={styles.urlInput}
             type="text"
             value={this.state.urlValue}
             onKeyDown={e => {
@@ -235,7 +208,8 @@ class App extends React.Component<Props, State> {
           />
           <label htmlFor="alt-input">Alt</label>
           <input
-            name="alt-input"
+            id="alt-input"
+            className="App-urlInput"
             onChange={this.onAltChange}
             type="text"
             ref={c => {
@@ -263,7 +237,11 @@ class App extends React.Component<Props, State> {
           onToggle={this.toggleInlineStyle}
           editorState={editorState}
         />
-        <MediaControls addImage={this.addImage} />
+        <MediaControls
+          addImage={this.addImage}
+          addAudio={this.addAudio}
+          addVideo={this.addVideo}
+        />
         {urlInput}
         <div
           className="App-editor"
