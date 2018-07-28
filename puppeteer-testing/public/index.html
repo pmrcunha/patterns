@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Hello</title>
+</head>
+
+<body>
+    <h1 data-testid="title">Hello</h1>
+
+    <nav data-testid="navbar">
+        <a data-testid="nav-li" href="#">home</a>
+        <a data-testid="nav-li" href="#">blog</a>
+        <a data-testid="nav-li" href="#">work</a>
+        <a data-testid="nav-li" href="#">wat</a>
+    </nav>
+
+    <form onsubmit="return go()">
+        <input data-testid="firstName" type="text" placeholder="First Name" />
+        <input data-testid="lastName" type="text" placeholder="Last Name" />
+        <input data-testid="email" type="email" placeholder="example@example.com" />
+        <input data-testid="password" type="password" />
+
+        <button data-testid="submit">login</button>
+    </form>
+
+    <h3 data-testid="banana" class="banana" style="display: none">BANANA</h3>
+
+    <h3 data-testid="starwars"></h3>
+
+    <script>
+        const sw = document.querySelector('[data-testid="starwars"]');
+        sw.innerHTML = 'Something went wrong';
+        data = fetch('https://swapi.co/api/people/1/').then(response => response.json())
+
+        data.then((t) => {
+            sw.innerHTML = t ? 'Received StarWars data!' : 'Something went wrong';
+        })
+
+        function go() {
+            const banana = document.querySelector('.banana');
+
+            if (document.cookie.includes('JWT')) {
+                banana.style.display = 'block';
+            }
+
+            document.cookie = 'firstName=banana';
+
+            return false;
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "puppeteer-testing",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest",
+    "debug": "cross-env-shell NODE_ENV=\"debug\" \"yarn test\"",
+    "start": "http-server"
+  },
+  "devDependencies": {
+    "cross-env": "^5.2.0",
+    "faker": "^4.1.0",
+    "http-server": "^0.11.1",
+    "jest": "^23.4.2",
+    "jest-cli": "^23.4.2",
+    "pixelmatch": "^4.0.2",
+    "puppeteer": "^1.6.1"
+  },
+  "jest": {
+    "testMatch": [
+      "<rootDir>/__tests__/**/*.{js,jsx,mjs}",
+      "<rootDir>/src/**/?(*.)(spec|test).{js,jsx,mjs}"
+    ],
+    "testEnvironment": "node"
+  }
+}
