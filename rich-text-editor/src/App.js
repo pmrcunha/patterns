@@ -5,7 +5,9 @@ import {
   EditorState,
   RichUtils,
   getDefaultKeyBinding,
-  AtomicBlockUtils
+  AtomicBlockUtils,
+  convertToRaw,
+  convertFromRaw
 } from "draft-js";
 import "draft-js/dist/Draft.css";
 import logo from "./logo.svg";
@@ -31,8 +33,9 @@ type Props = {};
 type State = {
   editorState: EditorState,
   showURLInput: boolean,
-  url: string,
-  urlType: string
+  urlType: string,
+  urlValue: string,
+  altValue: string
 };
 
 class App extends React.Component<Props, State> {
@@ -43,6 +46,14 @@ class App extends React.Component<Props, State> {
     altValue: "",
     urlType: ""
   };
+
+  componentDidMount() {
+    const initialState = window.localStorage.getItem("editorState");
+    if (initialState) {
+      const savedState = convertFromRaw(JSON.parse(initialState));
+      this.setState({ editorState: EditorState.createWithContent(savedState) });
+    }
+  }
 
   onChange: (editorState: EditorState) => void;
 
@@ -61,17 +72,27 @@ class App extends React.Component<Props, State> {
     }
   };
 
-  onURLChange = e => this.setState({ urlValue: e.target.value });
+  onURLChange = (e: SyntheticEvent<*>) =>
+    this.setState({
+      urlValue: e.target instanceof HTMLInputElement ? e.target.value : ""
+    });
 
-  onAltChange = e => this.setState({ altValue: e.target.value });
+  onAltChange = (e: SyntheticEvent<*>) =>
+    this.setState({
+      altValue: e.target instanceof HTMLInputElement ? e.target.value : ""
+    });
 
-  onURLInputKeyDown = e => {
+  onURLInputKeyDown = (e: SyntheticKeyboardEvent<*>) => {
     if (e.which === 13) {
       this.confirmMedia(e);
     }
   };
 
-  onAltInputKeyDown = e => {
+  urlInputComponentRef: React$ElementRef<Editor>;
+
+  altInputComponentRef: React$ElementRef<Editor>;
+
+  onAltInputKeyDown = (e: SyntheticKeyboardEvent<*>) => {
     if (e.which === 13) {
       this.altInputComponentRef.focus();
     }
@@ -95,6 +116,11 @@ class App extends React.Component<Props, State> {
 
   focus = () => this.editorComponentRef.editor.focus();
 
+  handleEditorClick = () => {
+    this.focus();
+    this.setState({ showURLInput: false });
+  };
+
   mapKeyToEditorCommand = (e: SyntheticKeyboardEvent<*>) => {
     // TODO This function never runs for the tab key
     const isTabKey = e.keyCode === 9;
@@ -116,7 +142,7 @@ class App extends React.Component<Props, State> {
     }
   };
 
-  confirmMedia = e => {
+  confirmMedia = (e: SyntheticKeyboardEvent<*> | SyntheticEvent<*>) => {
     e.preventDefault();
     const { editorState, urlValue, urlType, altValue } = this.state;
     const contentState = editorState.getCurrentContent();
@@ -146,7 +172,7 @@ class App extends React.Component<Props, State> {
     );
   };
 
-  promptForMedia = type => {
+  promptForMedia = (type: string) => {
     this.setState(
       {
         showURLInput: true,
@@ -185,13 +211,30 @@ class App extends React.Component<Props, State> {
     return false;
   };
 
+  handleEscapeKey = (e: SyntheticKeyboardEvent<*>) => {
+    if (e.keyCode === 27) {
+      this.setState({ showURLInput: false });
+    }
+  };
+
+  save = () => {
+    const content = this.state.editorState.getCurrentContent();
+    const convertedState = convertToRaw(content);
+    window.localStorage.setItem("editorState", JSON.stringify(convertedState));
+  };
+
   render() {
     const { editorState } = this.state;
 
     let urlInput;
     if (this.state.showURLInput) {
       urlInput = (
-        <div className="App-urlInputContainer">
+        <div
+          className="App-urlInputContainer"
+          onKeyDown={e => {
+            this.handleEscapeKey(e);
+          }}
+        >
           <label htmlFor="url-input">URL</label>
           <input
             id="url-input"
@@ -243,9 +286,12 @@ class App extends React.Component<Props, State> {
           addVideo={this.addVideo}
         />
         {urlInput}
+        <div>
+          <button onClick={this.save}>Save</button>
+        </div>
         <div
           className="App-editor"
-          onClick={this.focus}
+          onClick={this.handleEditorClick}
           onKeyDown={e => {
             if (e.keyCode === 9) {
               e.preventDefault();
